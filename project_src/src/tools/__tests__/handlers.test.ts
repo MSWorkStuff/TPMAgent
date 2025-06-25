@@ -152,11 +152,16 @@ describe('MCP Handlers', () => {
         },
       };
 
-      // The tool will receive empty arguments object and should execute successfully
-      // since our MockTool can handle { message: undefined }
-      const result = await handleCallTool(request);
-      expect(result.isError).toBe(false);
-      expect(result.content[0].text).toBe('Mock response: undefined');
+      // Should now throw an error due to missing required parameter
+      await expect(handleCallTool(request)).rejects.toThrow(McpError);
+      
+      try {
+        await handleCallTool(request);
+      } catch (error) {
+        expect(error).toBeInstanceOf(McpError);
+        expect((error as McpError).code).toBe(ErrorCode.InternalError);
+        expect((error as McpError).message).toContain('Missing required parameter: message');
+      }
     });
 
     it('should handle tools with no arguments', async () => {
@@ -212,6 +217,55 @@ describe('MCP Handlers', () => {
         expect((error as McpError).code).toBe(ErrorCode.InternalError);
         expect((error as McpError).message).toContain('Tool execution failed');
       }
+    });
+  });
+
+  describe('Validation Consistency', () => {
+    it('should validate BaseTool and ZodTool consistently', async () => {
+      // Both tools should enforce required parameters now
+      
+      class BaseToolMock extends BaseTool<{ message: string }, string> {
+        constructor() {
+          super('base_mock', 'Base tool mock', {
+            type: 'object',
+            properties: {
+              message: { type: 'string', description: 'Required message' },
+            },
+            required: ['message'],
+          });
+        }
+
+        async execute(params: { message: string }): Promise<string> {
+          return `BaseTool: ${params.message}`;
+        }
+      }
+
+      const baseTool = new BaseToolMock();
+      toolRegistry.register(baseTool);
+
+      // Test missing required parameter - should fail for both
+      const requestMissingParam = {
+        method: 'tools/call' as const,
+        params: {
+          name: 'base_mock',
+          arguments: {},
+        },
+      };
+
+      await expect(handleCallTool(requestMissingParam)).rejects.toThrow(McpError);
+      
+      // Test with valid parameter - should succeed
+      const requestValidParam = {
+        method: 'tools/call' as const,
+        params: {
+          name: 'base_mock',
+          arguments: { message: 'Hello World' },
+        },
+      };
+
+      const result = await handleCallTool(requestValidParam);
+      expect(result.isError).toBe(false);
+      expect(result.content[0].text).toBe('BaseTool: Hello World');
     });
   });
 });

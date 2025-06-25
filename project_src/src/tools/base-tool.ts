@@ -1,5 +1,6 @@
 import { Tool, ToolSchema } from '../types/index';
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 /**
  * Abstract base class for MCP tools with type safety
@@ -27,6 +28,46 @@ export abstract class BaseTool<TInput, TOutput> implements Tool<TInput, TOutput>
   }
 
   abstract execute(params: TInput): Promise<TOutput>;
+
+  /**
+   * Validate input parameters against the tool's schema
+   * Override this method to provide custom validation logic
+   */
+  protected validateInput(params: any): TInput {
+    if (!this.inputSchema) {
+      return params as TInput;
+    }
+
+    // Basic JSON Schema validation for required fields
+    if (this.inputSchema.required && Array.isArray(this.inputSchema.required)) {
+      for (const field of this.inputSchema.required) {
+        if (params[field] === undefined || params[field] === null) {
+          throw new Error(`Missing required parameter: ${field}`);
+        }
+      }
+    }
+
+    // Basic type validation for properties
+    if (this.inputSchema.properties) {
+      for (const [key, schema] of Object.entries(this.inputSchema.properties)) {
+        if (params[key] !== undefined && schema.type) {
+          const actualType = Array.isArray(params[key]) ? 'array' : typeof params[key];
+          if (actualType !== schema.type && !(schema.type === 'array' && Array.isArray(params[key]))) {
+            throw new Error(`Parameter '${key}' expected type '${schema.type}', got '${actualType}'`);
+          }
+        }
+      }
+    }
+
+    return params as TInput;
+  }
+
+  /**
+   * Public method to validate input parameters (used by registry)
+   */
+  public validate(params: any): TInput {
+    return this.validateInput(params);
+  }
 }
 
 /**
@@ -46,75 +87,30 @@ export abstract class ZodTool<
   }
 
   /**
-   * Convert Zod schema to MCP ToolSchema
+   * Convert Zod schema to MCP ToolSchema using zod-to-json-schema library
    */
   private static zodSchemaToToolSchema(zodSchema: z.ZodSchema): ToolSchema {
-    // This is a simplified conversion - you might want to use a library like zod-to-json-schema
-    const def = (zodSchema as any)._def;
-    
-    if (def?.typeName === 'ZodObject' && def.shape) {
-      const properties: Record<string, any> = {};
-      const required: string[] = [];
+    const jsonSchema = zodToJsonSchema(zodSchema, {
+      name: undefined, // Don't add a root $schema name
+      target: 'jsonSchema7', // Use JSON Schema draft 7
+    });
 
-      for (const [key, value] of Object.entries(def.shape())) {
-        const zodType = value as z.ZodSchema;
-        properties[key] = ZodTool.zodTypeToJsonSchema(zodType);
-        
-        if (!(zodType as any).isOptional?.()) {
-          required.push(key);
-        }
-      }
-
+    // Type guard to ensure we're working with an object schema
+    if (typeof jsonSchema === 'object' && jsonSchema !== null && !Array.isArray(jsonSchema)) {
+      const objectSchema = jsonSchema as any; // We know this is the JSON Schema format we expect
+      
       return {
         type: 'object',
-        properties,
-        required: required.length > 0 ? required : undefined,
-      };
+        properties: objectSchema.properties || {},
+        required: objectSchema.required || undefined,
+      } as ToolSchema;
     }
 
+    // Fallback for non-object schemas
     return {
       type: 'object',
       properties: {},
-    };
-  }
-
-  /**
-   * Convert individual Zod type to JSON Schema property
-   */
-  private static zodTypeToJsonSchema(zodType: z.ZodSchema): any {
-    const def = (zodType as any)._def;
-    const typeName = def?.typeName;
-    
-    switch (typeName) {
-      case 'ZodString':
-        return { type: 'string', description: (zodType as any).description };
-      case 'ZodNumber':
-        return { type: 'number', description: (zodType as any).description };
-      case 'ZodBoolean':
-        return { type: 'boolean', description: (zodType as any).description };
-      case 'ZodArray':
-        return {
-          type: 'array',
-          items: ZodTool.zodTypeToJsonSchema(def.type),
-          description: (zodType as any).description,
-        };
-      case 'ZodObject':
-        const shape = def.shape?.();
-        return {
-          type: 'object',
-          properties: shape ? Object.fromEntries(
-            Object.entries(shape).map(([key, value]) => [
-              key,
-              ZodTool.zodTypeToJsonSchema(value as z.ZodSchema),
-            ])
-          ) : {},
-          description: (zodType as any).description,
-        };
-      case 'ZodOptional':
-        return ZodTool.zodTypeToJsonSchema(def.innerType);
-      default:
-        return { type: 'string', description: (zodType as any).description || 'No description provided' };
-    }
+    } as ToolSchema;
   }
 
   /**

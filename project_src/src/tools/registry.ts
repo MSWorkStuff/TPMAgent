@@ -128,7 +128,21 @@ export class ToolRegistry {
         params: typeof params === 'object' ? Object.keys(params as any) : params
       });
 
-      const result = await tool.execute(params);
+      // Validate input parameters if the tool supports validation
+      let validatedParams = params;
+      if ('validate' in tool && typeof tool.validate === 'function') {
+        try {
+          validatedParams = (tool as any).validate(params);
+        } catch (validationError) {
+          throw new ToolExecutionError(
+            toolName,
+            `Validation failed: ${validationError instanceof Error ? validationError.message : String(validationError)}`,
+            validationError instanceof Error ? validationError : undefined
+          );
+        }
+      }
+
+      const result = await tool.execute(validatedParams);
       success = true;
 
       const duration = Date.now() - startTime;
