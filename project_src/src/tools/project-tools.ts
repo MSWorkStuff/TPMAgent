@@ -94,3 +94,88 @@ export async function generateImplementationStrategy(
     ],
   };
 }
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema?: {
+    type: string;
+    properties?: Record<string, any>;
+    required?: string[];
+  };
+  handler: (args: any) => Promise<any>;
+}
+
+/**
+ * Read and return all available tools for the MCP server
+ */
+export async function readExistingTools(): Promise<MCPTool[]> {
+  return [
+    {
+      name: 'analyze_project',
+      description: 'Analyzes a project description and generates a comprehensive project plan',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          projectDescription: {
+            type: 'string',
+            description: 'Description of the project to analyze',
+          },
+          requirements: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of project requirements',
+          },
+          techStack: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Preferred technology stack',
+          },
+        },
+        required: ['projectDescription', 'requirements'],
+      },
+      handler: async (args) => {
+        const parsed = ProjectAnalysisSchema.parse(args);
+        return await analyzeProject(parsed);
+      },
+    },
+    {
+      name: 'generate_implementation_strategy',
+      description: 'Generates an implementation strategy based on a project plan',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          projectPlan: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              description: { type: 'string' },
+              techStack: {
+                type: 'object',
+                additionalProperties: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+              },
+            },
+            required: ['name', 'description'],
+            description: 'Project plan to generate implementation strategy for',
+          },
+          timeline: {
+            type: 'string',
+            description: 'Target timeline for the project',
+          },
+          teamSize: {
+            type: 'number',
+            description: 'Available team size',
+          },
+        },
+        required: ['projectPlan'],
+      },
+      handler: async (args) => {
+        const parsed = ImplementationStrategySchema.parse(args);
+        return await generateImplementationStrategy(parsed);
+      },
+    },
+  ];
+}

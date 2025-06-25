@@ -1,0 +1,16 @@
+# Example SSE Server Configuration for TPM Agent MCP Server
+# Copy this file as sse-server.config.yaml and edit as needed for your SSE server setup.
+
+server:
+  port: 3001
+  host: "localhost"
+  endpoint: "/mcp"
+  messagesEndpoint: "/messages"
+
+logging:
+  level: 1  # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+  service: "mcp-sse-server"
+
+mcp:
+  name: "tpm-agent-mcp-server"
+  version: "0.1.0"

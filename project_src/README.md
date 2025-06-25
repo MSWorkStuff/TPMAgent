@@ -26,11 +26,20 @@ This MCP server is part of the TPMAgent project, designed to simulate the behavi
    cp .env.example .env
    ```
 
-4. Build the project:
+4. Configure the MCP server, more details in [README-SSE](./README-SSE.md):
+   ```bash
+   # For project management features
+   cp example.config.yaml config.yaml
+   # For SSE server
+   cp example.sse-server.config.yaml sse-server.config.yaml
+   ```
+   Edit both config files with your settings.
+
+5. Build the project:
    ```bash
    npm run build
    ```
-5. Run the tests
+6. Run the tests
    ```bash
    npm test
    ```
@@ -52,7 +61,8 @@ npm run build
 ### Starting the Server
 
 ```bash
-npm start
+npm run dev          # Development with auto-reload
+npm run start:sse    # Production SSE server
 ```
 
 ### Linting and Formatting
