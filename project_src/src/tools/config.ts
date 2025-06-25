@@ -64,7 +64,7 @@ export function loadConfig({
   if (!fs.existsSync(yamlPath)) {
     throw new Error(`Config file not found: ${yamlPath}`);
   }
-  let rawConfig: any;
+  let rawConfig: unknown;
   try {
     rawConfig = yaml.load(fs.readFileSync(yamlPath, 'utf8'));
   } catch (e) {
