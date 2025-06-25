@@ -73,3 +73,53 @@ export interface ResourceRequirement {
   skillsRequired: string[];
   hoursRequired: number;
 }
+
+// MCP Tool Framework Types
+export interface ToolSchema {
+  type: 'object';
+  properties?: Record<string, any>;
+  required?: string[];
+  additionalProperties?: boolean;
+}
+
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema?: ToolSchema;
+}
+
+export interface ToolResult<T = any> {
+  content: Array<{
+    type: 'text';
+    text: string;
+  }>;
+  isError?: boolean;
+}
+
+export interface Tool<TInput = any, TOutput = any> {
+  /**
+   * Get the name of the tool
+   */
+  getName(): string;
+
+  /**
+   * Get the description of the tool
+   */
+  getDescription(): string;
+
+  /**
+   * Get the input schema for the tool
+   */
+  getInputSchema?(): ToolSchema;
+
+  /**
+   * Execute the tool with the given parameters
+   */
+  execute(params: TInput): Promise<TOutput>;
+}
+
+export interface ToolExecutionContext {
+  toolName: string;
+  requestId?: string;
+  timestamp: Date;
+}
