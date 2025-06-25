@@ -13,7 +13,7 @@
     "start": "node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config jest.config.cjs"
   },
   "keywords": [
     "mcp",
@@ -28,7 +28,8 @@
     "@octokit/rest": "^22.0.0",
     "dotenv": "^16.5.0",
     "yaml": "^2.8.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -39,6 +40,10 @@
     "globals": "^16.2.0",
     "prettier": "^3.5.3",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "jest": "^30.0.3",
+    "ts-jest": "^29.4.0"
   }
 }

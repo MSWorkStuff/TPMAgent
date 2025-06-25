@@ -30,6 +30,10 @@ This MCP server is part of the TPMAgent project, designed to simulate the behavi
    ```bash
    npm run build
    ```
+5. Run the tests
+   ```bash
+   npm test
+   ```
 
 ## Development
 

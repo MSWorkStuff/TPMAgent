@@ -1,0 +1,26 @@
+# Example configuration for TPM Agent MCP Server
+# Copy this file as config.yaml and edit as needed for your project.
+
+repository: "octocat/hello-world"  # Format: owner/name
+projectId: 123456
+milestoneDuration: 14  # Duration in days (default: 14)
+defaultLabels:
+  - bug
+  - enhancement
+  - question
+issueTemplates:
+  - name: "Bug Report"
+    description: "Report a bug in the project."
+    body: |
+      ### Describe the bug
+      A clear and concise description of what the bug is.
+      
+      ### Steps to reproduce
+      1. Go to '...'
+      2. Click on '...'
+      3. See error
+  - name: "Feature Request"
+    description: "Suggest a new feature."
+    body: |
+      ### Feature description
+      Please describe the feature you would like to see.
