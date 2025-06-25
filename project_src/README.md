@@ -64,10 +64,27 @@ npm run format
 
 ## Configuration
 
-The server can be configured using environment variables. Copy `.env.example` to `.env` and configure as needed:
+### 1. Environment variables
+
+This project uses a YAML configuration file and environment variables for setup. The server can be configured using environment variables. Copy `.env.example` to `.env` and configure as needed:
 
 - `GITHUB_TOKEN`: GitHub API token for repository operations (optional)
 - `DEBUG`: Enable debug logging (optional)
+
+### 2. YAML Configuration
+
+Copy the provided `example.config.yaml` from the project root and rename it to `config.yaml` to get started:
+
+- `example.config.yaml` contains a sample configuration with all supported fields.
+- Edit your `config.yaml` as needed for your project.
+
+See [`example.config.yaml`](./example.config.yaml) for the full example and field documentation.
+
+- `repository`: GitHub repository in `owner/name` format
+- `projectId`: GitHub Project ID (string or number)
+- `milestoneDuration`: Milestone duration in days (default: 14)
+- `defaultLabels`: List of labels to create
+- `issueTemplates`: List of issue templates (name, description, body)
 
 ## Usage with MCP Clients
 
