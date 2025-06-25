@@ -1,0 +1,26 @@
+# Test SSE Server Configuration for TPM Agent MCP Server
+# This config is used for testing the MCP tool framework
+
+server:
+  port: 3001
+  host: "localhost"
+  endpoint: "/mcp"
+  messagesEndpoint: "/messages"
+
+logging:
+  level: 1  # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+  service: "mcp-sse-server-test"
+
+mcp:
+  name: "tpm-agent-mcp-server-test"
+  version: "0.1.0"
+
+# Tool-specific configuration
+tools:
+  enabled: true
+  maxExecutionTime: 30000  # 30 seconds
+  logging:
+    level: 1
+    includeParams: true
+  validation:
+    strict: true

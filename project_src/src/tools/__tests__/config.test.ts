@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 
 describe('Config Loader', () => {
   const tempDir = path.join(__dirname, 'tmp');
-  const yamlPath = path.join(tempDir, 'config.yaml');
+  const yamlPath = path.join(tempDir, 'tpm-agent.config.yaml');
   const envPath = path.join(tempDir, '.env');
 
   beforeAll(() => {

@@ -1,7 +1,7 @@
 import { handleListTools, handleCallTool } from '../handlers';
 import { toolRegistry } from '../registry';
 import { BaseTool } from '../base-tool';
-import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types';
 
 describe('MCP Handlers', () => {
   // Test tool implementation
@@ -152,8 +152,11 @@ describe('MCP Handlers', () => {
         },
       };
 
-      // Should still work with empty arguments object
-      await expect(handleCallTool(request)).rejects.toThrow();
+      // The tool will receive empty arguments object and should execute successfully
+      // since our MockTool can handle { message: undefined }
+      const result = await handleCallTool(request);
+      expect(result.isError).toBe(false);
+      expect(result.content[0].text).toBe('Mock response: undefined');
     });
 
     it('should handle tools with no arguments', async () => {

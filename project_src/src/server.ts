@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
 import express from 'express';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse';
 import {
   CallToolRequestSchema,
   ErrorCode,
   ListToolsRequestSchema,
   McpError,
-} from '@modelcontextprotocol/sdk/types.js';
+} from '@modelcontextprotocol/sdk/types';
 import * as dotenv from 'dotenv';
-import { createLogger, LogLevel } from './utils/logger.js';
-import { loadConfig } from './config/index.js';
-import { initializeTools, handleListTools, handleCallTool } from './tools/index.js';
+import { createLogger, LogLevel } from './utils/logger';
+import { loadConfig } from './config/index';
+import { initializeTools, handleListTools, handleCallTool } from './tools/index';
 
 // Load environment variables
 dotenv.config();

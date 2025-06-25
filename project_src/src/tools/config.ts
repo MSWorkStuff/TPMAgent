@@ -46,7 +46,7 @@ export type AppConfig = z.infer<ReturnType<typeof defineYamlSchema>>;
 export type EnvConfig = z.infer<ReturnType<typeof defineEnvSchema>>;
 
 export function loadConfig({
-  yamlPath = path.resolve(process.cwd(), 'config.yaml'),
+  yamlPath = path.resolve(process.cwd(), 'tpm-agent.config.yaml'),
   envPath = path.resolve(process.cwd(), '.env'),
 } = {}): { config: AppConfig; env: EnvConfig } {
   // Load and validate environment variables

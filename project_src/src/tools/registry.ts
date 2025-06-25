@@ -1,4 +1,4 @@
-import { Tool, ToolDefinition, ToolResult, ToolExecutionContext } from '../types/index.js';
+import { Tool, ToolDefinition, ToolResult, ToolExecutionContext } from '../types/index';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('tool-registry');

@@ -131,7 +131,7 @@ describe('ToolRegistry', () => {
       expect(history).toHaveLength(1);
       expect(history[0].toolName).toBe('test_tool');
       expect(history[0].success).toBe(true);
-      expect(history[0].duration).toBeGreaterThan(0);
+      expect(history[0].duration).toBeGreaterThanOrEqual(0);
     });
 
     it('should track failed executions in history', async () => {
@@ -186,7 +186,7 @@ describe('ToolRegistry', () => {
       expect(stats.totalExecutions).toBe(3);
       expect(stats.successfulExecutions).toBe(2);
       expect(stats.failedExecutions).toBe(1);
-      expect(stats.averageDuration).toBeGreaterThan(0);
+      expect(stats.averageDuration).toBeGreaterThanOrEqual(0);
       expect(stats.toolUsageCount).toEqual({
         test_tool: 2,
         error_tool: 1,

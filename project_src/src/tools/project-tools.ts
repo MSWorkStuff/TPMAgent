@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ProjectPlan, ImplementationStrategy } from '../types/index.js';
+import type { ProjectPlan, ImplementationStrategy } from '../types/index';
 
 // Schema for project analysis tool
 export const ProjectAnalysisSchema = z.object({

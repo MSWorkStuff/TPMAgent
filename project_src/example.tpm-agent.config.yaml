@@ -1,5 +1,5 @@
 # Example configuration for TPM Agent MCP Server (Project Management Features)
-# Copy this file as config.yaml and edit as needed for your project management setup.
+# Copy this file as tpm-agent.config.yaml and edit as needed for your project management setup.
 # This is separate from the SSE server configuration (see example.sse-server.config.yaml)
 
 repository: "octocat/hello-world"  # Format: owner/name

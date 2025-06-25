@@ -1,0 +1,43 @@
+# Test configuration for TPM Agent MCP Server
+# This config is used for testing project management tools
+
+repository: "test/mock-project"
+projectId: 123456
+milestoneDuration: 14
+defaultLabels:
+  - test
+  - mock
+  - development
+
+# Mock project settings for testing
+projects:
+  - id: "test-project-1"
+    name: "Mock Web Application"
+    description: "A test project for validating the tool framework"
+    status: "in-progress"
+    techStack:
+      frontend: ["React", "TypeScript"]
+      backend: ["Node.js", "Express"]
+      database: ["PostgreSQL"]
+    
+  - id: "test-project-2" 
+    name: "Mobile App Project"
+    description: "A mobile application test project"
+    status: "planning"
+    techStack:
+      frontend: ["React Native"]
+      backend: ["Node.js"]
+      database: ["MongoDB"]
+
+# Test data for validation
+testData:
+  sampleRequirements:
+    - "User authentication and authorization"
+    - "Data persistence and retrieval" 
+    - "Real-time notifications"
+    - "Mobile responsive design"
+  
+  sampleTechStacks:
+    - ["React", "Node.js", "PostgreSQL", "Redis"]
+    - ["Vue.js", "Python", "Django", "MySQL"]
+    - ["Angular", "Java", "Spring Boot", "MongoDB"]

@@ -29,7 +29,7 @@ This MCP server is part of the TPMAgent project, designed to simulate the behavi
 4. Configure the MCP server, more details in [README-SSE](./README-SSE.md):
    ```bash
    # For project management features
-   cp example.config.yaml config.yaml
+   cp example.tpm-agent.config.yaml tpm-agent.config.yaml
    # For SSE server
    cp example.sse-server.config.yaml sse-server.config.yaml
    ```
@@ -83,12 +83,12 @@ This project uses a YAML configuration file and environment variables for setup.
 
 ### 2. YAML Configuration
 
-Copy the provided `example.config.yaml` from the project root and rename it to `config.yaml` to get started:
+Copy the provided `example.tpm-agent.config.yaml` from the project root and rename it to `tpm-agent.config.yaml` to get started:
 
-- `example.config.yaml` contains a sample configuration with all supported fields.
-- Edit your `config.yaml` as needed for your project.
+- `example.tpm-agent.config.yaml` contains a sample configuration with all supported fields.
+- Edit your `tpm-agent.config.yaml` as needed for your project.
 
-See [`example.config.yaml`](./example.config.yaml) for the full example and field documentation.
+See [`example.tpm-agent.config.yaml`](./example.tpm-agent.config.yaml) for the full example and field documentation.
 
 - `repository`: GitHub repository in `owner/name` format
 - `projectId`: GitHub Project ID (string or number)

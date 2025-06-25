@@ -5,7 +5,7 @@ import {
   ListToolsResult,
   ErrorCode,
   McpError 
-} from '@modelcontextprotocol/sdk/types.js';
+} from '@modelcontextprotocol/sdk/types';
 import { toolRegistry, ToolExecutionError, ToolNotFoundError } from './registry';
 import { createLogger } from '../utils/logger';
 
