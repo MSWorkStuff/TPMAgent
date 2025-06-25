@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { load } from 'js-yaml';
-import { LogLevel } from '../utils/logger.js';
+import { LogLevel } from '../utils/logger';
 
 // Configuration schema
 const ConfigSchema = z.object({
