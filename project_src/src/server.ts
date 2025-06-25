@@ -9,16 +9,17 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
 import * as dotenv from 'dotenv';
 import { createLogger, LogLevel } from './utils/logger.js';
 import { loadConfig } from './config/index.js';
 import { readExistingTools, MCPTool } from './tools/project-tools.js';
+import Ajv from 'ajv';
 
 // Load environment variables
 dotenv.config();
 
 const logger = createLogger('mcp-sse-server');
+const ajv = new Ajv();
 
 // Global server instances tracking
 const activeTransports = new Set<SSEServerTransport>();
@@ -83,22 +84,21 @@ function registerHandlers(server: Server) {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
       }
 
-      // Validate arguments against the tool's schema
-      const validationResult = tool.inputSchema ? 
-        z.object(tool.inputSchema.properties || {}).safeParse(args) : 
-        { success: true, data: args };
-
-      // Validate arguments against the tool's schema
-      if (!validationResult.success) {
-        const errorMessage = 'error' in validationResult ? 
-          validationResult.error.errors.map((e: any) => 
-            `${e.path.join('.')}: ${e.message}`).join(', ') :
-          'Validation failed';
-        
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Invalid parameters: ${errorMessage}`
-        );
+      // Validate arguments against the tool's schema using AJV
+      let validationResult: { success: boolean; data?: any; error?: any };
+      if (tool.inputSchema) {
+        const validate = ajv.compile(tool.inputSchema);
+        const valid = validate(args);
+        if (!valid) {
+          const errorMessage = validate.errors?.map(e => `${e.instancePath || e.schemaPath}: ${e.message}`).join(', ') || 'Validation failed';
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            `Invalid parameters: ${errorMessage}`
+          );
+        }
+        validationResult = { success: true, data: args };
+      } else {
+        validationResult = { success: true, data: args };
       }
 
       // Execute the tool
