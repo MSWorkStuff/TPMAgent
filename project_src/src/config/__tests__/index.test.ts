@@ -21,6 +21,12 @@ describe('SSE Config Loader', () => {
     delete process.env.MCP_HOST;
     delete process.env.LOG_LEVEL;
     delete process.env.SERVICE_NAME;
+    delete process.env.GITHUB_TOKEN;
+    delete process.env.GITHUB_PAT;
+    delete process.env.GITHUB_USER_AGENT;
+    delete process.env.GITHUB_API_URL;
+    delete process.env.GITHUB_MAX_RETRIES;
+    delete process.env.GITHUB_RETRY_DELAY;
   });
 
   it('should load default configuration when no file exists', () => {
@@ -34,6 +40,8 @@ describe('SSE Config Loader', () => {
     expect(config.logging.service).toBe('mcp-sse-server');
     expect(config.mcp.name).toBe('tpm-agent-mcp-server');
     expect(config.mcp.version).toBe('0.1.0');
+    expect(config.github?.maxRetries).toBe(3);
+    expect(config.github?.retryDelay).toBe(1000);
   });
 
   it('should load and merge YAML configuration', () => {
@@ -46,6 +54,10 @@ logging:
   service: "custom-service"
 mcp:
   name: "custom-mcp-server"
+github:
+  token: "yaml-token"
+  userAgent: "yaml-agent"
+  maxRetries: 5
 `;
     fs.writeFileSync(configPath, yamlConfig);
     
@@ -56,6 +68,9 @@ mcp:
     expect(config.logging.level).toBe(LogLevel.DEBUG);
     expect(config.logging.service).toBe('custom-service');
     expect(config.mcp.name).toBe('custom-mcp-server');
+    expect(config.github?.token).toBe('yaml-token');
+    expect(config.github?.userAgent).toBe('yaml-agent');
+    expect(config.github?.maxRetries).toBe(5);
   });
 
   it('should override config with environment variables', () => {
@@ -63,6 +78,9 @@ mcp:
 server:
   port: 4001
   host: "localhost"
+github:
+  token: "yaml-token"
+  maxRetries: 2
 `;
     fs.writeFileSync(configPath, yamlConfig);
     
@@ -70,6 +88,9 @@ server:
     process.env.MCP_HOST = '127.0.0.1';
     process.env.LOG_LEVEL = 'DEBUG';
     process.env.SERVICE_NAME = 'env-service';
+    process.env.GITHUB_TOKEN = 'env-token';
+    process.env.GITHUB_USER_AGENT = 'env-agent';
+    process.env.GITHUB_MAX_RETRIES = '10';
     
     const config = loadConfig(configPath);
     
@@ -77,6 +98,26 @@ server:
     expect(config.server.host).toBe('127.0.0.1');
     expect(config.logging.level).toBe(LogLevel.DEBUG);
     expect(config.logging.service).toBe('env-service');
+    expect(config.github?.token).toBe('env-token');
+    expect(config.github?.userAgent).toBe('env-agent');
+    expect(config.github?.maxRetries).toBe(10);
+  });
+
+  it('should prefer GITHUB_TOKEN over GITHUB_PAT', () => {
+    process.env.GITHUB_TOKEN = 'primary-token';
+    process.env.GITHUB_PAT = 'secondary-token';
+    
+    const config = loadConfig();
+    
+    expect(config.github?.token).toBe('primary-token');
+  });
+
+  it('should use GITHUB_PAT when GITHUB_TOKEN is not available', () => {
+    process.env.GITHUB_PAT = 'pat-token';
+    
+    const config = loadConfig();
+    
+    expect(config.github?.token).toBe('pat-token');
   });
 
   it('should validate configuration schema', () => {

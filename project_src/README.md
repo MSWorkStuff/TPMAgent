@@ -11,7 +11,7 @@ This MCP server is part of the TPMAgent project, designed to simulate the behavi
 - **Project Planning Tools**: Generate comprehensive project plans with milestones and dependencies
 - **Implementation Strategy Generation**: Create step-by-step implementation strategies
 - **Code Bootstrap**: Generate initial code scaffolding and documentation
-- **GitHub Integration**: Interact with GitHub repositories for project management
+- **GitHub Integration**: Comprehensive GitHub API client with rate limiting, retry logic, and error handling
 
 ## Installation
 
@@ -78,7 +78,12 @@ npm run format
 
 This project uses a YAML configuration file and environment variables for setup. The server can be configured using environment variables. Copy `.env.example` to `.env` and configure as needed:
 
-- `GITHUB_TOKEN`: GitHub API token for repository operations (optional)
+- `GITHUB_TOKEN`: GitHub API token for repository operations (required for GitHub features)
+- `GITHUB_PAT`: Alternative environment variable for GitHub Personal Access Token
+- `GITHUB_USER_AGENT`: Custom user agent for GitHub API requests (optional)
+- `GITHUB_API_URL`: Custom GitHub API URL (optional, defaults to https://api.github.com)
+- `GITHUB_MAX_RETRIES`: Maximum number of retry attempts for failed requests (optional, default: 3)
+- `GITHUB_RETRY_DELAY`: Base delay between retries in milliseconds (optional, default: 1000)
 - `DEBUG`: Enable debug logging (optional)
 
 ### 2. YAML Configuration
@@ -89,6 +94,21 @@ Copy the provided `example.tpm-agent.config.yaml` from the project root and rena
 - Edit your `tpm-agent.config.yaml` as needed for your project.
 
 See [`example.tpm-agent.config.yaml`](./example.tpm-agent.config.yaml) for the full example and field documentation.
+
+#### GitHub Configuration
+
+The GitHub client can be configured via YAML:
+
+```yaml
+github:
+  token: "your-github-token"     # GitHub API token
+  userAgent: "MyApp/1.0.0"       # Custom user agent
+  apiUrl: "https://api.github.com" # GitHub API URL
+  maxRetries: 3                  # Maximum retry attempts
+  retryDelay: 1000               # Base delay between retries (ms)
+```
+
+#### Project Configuration
 
 - `repository`: GitHub repository in `owner/name` format
 - `projectId`: GitHub Project ID (string or number)
@@ -104,15 +124,35 @@ This server implements the Model Context Protocol and can be used with any MCP-c
 - Implementation strategy generation
 - Code scaffolding and bootstrapping
 - Technical documentation generation
+- GitHub repository management and operations
+
+### GitHub Client Features
+
+The integrated GitHub client provides:
+
+- **Authentication**: Support for GitHub tokens via environment variables
+- **Rate Limiting**: Automatic detection and handling of GitHub API rate limits
+- **Retry Logic**: Exponential backoff for network failures and server errors
+- **Error Handling**: User-friendly error messages for common GitHub API issues
+- **Connection Testing**: Validates credentials on startup
+- **Repository Operations**: List, get, and manage GitHub repositories
+- **Issue Management**: Create, list, and manage GitHub issues
+- **Pull Request Operations**: Create, list, and manage pull requests
 
 ## Project Structure
 
 ```
 src/
 ├── server.ts          # Main MCP server entry point
-├── tools/             # Tool implementations (to be added)
-├── services/          # Business logic services (to be added)
-└── types/             # TypeScript type definitions (to be added)
+├── config/            # Configuration management
+├── github/            # GitHub API client and integration
+│   ├── client.ts      # Main GitHub client with Octokit wrapper
+│   ├── types.ts       # TypeScript types for GitHub operations
+│   ├── errors.ts      # Error handling and translation
+│   └── integration.ts # Integration helpers and examples
+├── tools/             # Tool implementations
+├── types/             # TypeScript type definitions
+└── utils/             # Utility functions and logger
 ```
 
 ## Contributing

@@ -19,6 +19,13 @@ const ConfigSchema = z.object({
     name: z.string().default('tpm-agent-mcp-server'),
     version: z.string().default('0.1.0'),
   }),
+  github: z.object({
+    token: z.string().optional(),
+    userAgent: z.string().optional(),
+    apiUrl: z.string().optional(),
+    maxRetries: z.number().default(3),
+    retryDelay: z.number().default(1000),
+  }).optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -60,6 +67,13 @@ export function loadConfig(configPath?: string): Config {
       name: process.env.MCP_SERVER_NAME,
       version: process.env.MCP_SERVER_VERSION,
     },
+    github: {
+      token: process.env.GITHUB_TOKEN || process.env.GITHUB_PAT,
+      userAgent: process.env.GITHUB_USER_AGENT,
+      apiUrl: process.env.GITHUB_API_URL,
+      maxRetries: process.env.GITHUB_MAX_RETRIES ? parseInt(process.env.GITHUB_MAX_RETRIES, 10) : undefined,
+      retryDelay: process.env.GITHUB_RETRY_DELAY ? parseInt(process.env.GITHUB_RETRY_DELAY, 10) : undefined,
+    },
   };
 
   // Remove undefined values
@@ -71,6 +85,7 @@ export function loadConfig(configPath?: string): Config {
     server: { ...(fileConfig as any).server, ...cleanEnvConfig.server },
     logging: { ...(fileConfig as any).logging, ...cleanEnvConfig.logging },
     mcp: { ...(fileConfig as any).mcp, ...cleanEnvConfig.mcp },
+    github: { ...(fileConfig as any).github, ...cleanEnvConfig.github },
   };
 
   // Validate and return
