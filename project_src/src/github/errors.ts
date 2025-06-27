@@ -125,8 +125,17 @@ export function translateGitHubError(error: GitHubClientError): GitHubApiError {
  */
 export function isRetryableError(error: GitHubClientError): boolean {
   if (error instanceof RequestError) {
-    // Retry on server errors and rate limits
-    return error.status >= 500 || error.status === 403;
+    // Retry on server errors (5xx)
+    if (error.status >= 500) {
+      return true;
+    }
+    
+    // Only retry on 403 if it's a rate limit (not a permission error)
+    if (error.status === 403) {
+      return error.response?.headers?.['x-ratelimit-remaining'] === '0';
+    }
+    
+    return false;
   }
 
   // Retry on network errors

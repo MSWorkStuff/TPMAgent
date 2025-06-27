@@ -196,7 +196,10 @@ describe('GitHub Error Handling', () => {
         response: {
           status: 403,
           url: 'https://api.github.com/user',
-          headers: {},
+          headers: {
+            'x-ratelimit-remaining': '0',
+            'x-ratelimit-reset': '1640995200',
+          },
           data: {},
         } as any,
         request: {
@@ -207,6 +210,24 @@ describe('GitHub Error Handling', () => {
       });
 
       expect(isRetryableError(rateLimitError)).toBe(true);
+    });
+
+    it('should identify permission errors as non-retryable', () => {
+      const permissionError = new RequestError('Forbidden', 403, {
+        response: {
+          status: 403,
+          url: 'https://api.github.com/repos/private/repo',
+          headers: {}, // No rate limit headers
+          data: {},
+        } as any,
+        request: {
+          method: 'GET',
+          url: 'https://api.github.com/repos/private/repo',
+          headers: {},
+        } as any,
+      });
+
+      expect(isRetryableError(permissionError)).toBe(false);
     });
 
     it('should identify authentication errors as non-retryable', () => {
