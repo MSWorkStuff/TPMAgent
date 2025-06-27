@@ -4,6 +4,7 @@ import {
   ImplementationStrategyTool, 
   ProjectStatusTool 
 } from './project-tools-new';
+import { CreateGitHubIssueTool } from './github-tools';
 
 /**
  * Initialize and register all tools
@@ -13,6 +14,7 @@ export function initializeTools(): void {
   toolRegistry.register(new ProjectAnalysisTool());
   toolRegistry.register(new ImplementationStrategyTool());
   toolRegistry.register(new ProjectStatusTool());
+  toolRegistry.register(new CreateGitHubIssueTool());
 }
 
 /**
@@ -23,7 +25,8 @@ export function getToolRegistry() {
 }
 
 // Export the tools for direct use if needed
-export { ProjectAnalysisTool, ImplementationStrategyTool, ProjectStatusTool };
+export { ProjectAnalysisTool, ImplementationStrategyTool, ProjectStatusTool } from './project-tools-new';
+export { CreateGitHubIssueTool } from './github-tools';
 
 // Export the registry and related classes
 export { toolRegistry, ToolRegistry, ToolExecutionError, ToolNotFoundError } from './registry';

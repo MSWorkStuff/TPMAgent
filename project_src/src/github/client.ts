@@ -339,6 +339,84 @@ export class GitHubClient {
   }
 
   /**
+   * Gets labels for a repository
+   */
+  async getLabels(owner: string, repo: string): Promise<any[]> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.issues.listLabelsForRepo({
+          owner,
+          repo,
+          per_page: 100,
+        })
+      );
+      
+      return response.data;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Creates a label
+   */
+  async createLabel(owner: string, repo: string, labelData: {
+    name: string;
+    color: string;
+    description?: string;
+  }): Promise<any> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.issues.createLabel({
+          owner,
+          repo,
+          ...labelData,
+        })
+      );
+      
+      return response.data;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Finds a milestone by title
+   */
+  async findMilestoneByTitle(owner: string, repo: string, title: string): Promise<any | null> {
+    try {
+      const milestones = await this.getMilestones(owner, repo);
+      return milestones.find(milestone => milestone.title === title) || null;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Finds a label by name
+   */
+  async findLabelByName(owner: string, repo: string, name: string): Promise<any | null> {
+    try {
+      const labels = await this.getLabels(owner, repo);
+      return labels.find(label => label.name === name) || null;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Adds an issue to a project (placeholder for future implementation)
+   * Note: This would require GraphQL API for Projects v2
+   * For now, this method logs the intent but doesn't perform the action
+   */
+  async addIssueToProject(owner: string, repo: string, issueNumber: number, projectId: number): Promise<void> {
+    // For now, we'll just log this - implementing project assignment would require
+    // either GraphQL API for Projects v2 or specific project API endpoints
+    console.log(`Note: Issue #${issueNumber} should be added to project ${projectId} in ${owner}/${repo}`);
+    console.log(`Project assignment is not yet implemented due to API limitations`);
+  }
+
+  /**
    * Executes a function with retry logic and rate limiting
    */
   private async executeWithRetry<T>(
