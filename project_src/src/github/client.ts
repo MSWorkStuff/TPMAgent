@@ -262,6 +262,83 @@ export class GitHubClient {
   }
 
   /**
+   * Gets the authenticated user
+   */
+  async getCurrentUser(): Promise<GitHubUser> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.users.getAuthenticated()
+      );
+      
+      return this.mapUser(response.data);
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Gets user permissions for a repository
+   */
+  async getRepositoryPermissions(owner: string, repo: string, username: string): Promise<any> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.repos.getCollaboratorPermissionLevel({
+          owner,
+          repo,
+          username,
+        })
+      );
+      
+      return response.data.permission;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Gets milestones for a repository
+   */
+  async getMilestones(owner: string, repo: string): Promise<any[]> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.issues.listMilestones({
+          owner,
+          repo,
+          state: 'all',
+          per_page: 100,
+        })
+      );
+      
+      return response.data;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
+   * Creates a milestone
+   */
+  async createMilestone(owner: string, repo: string, milestoneData: {
+    title: string;
+    description?: string;
+    due_on?: string;
+  }): Promise<any> {
+    try {
+      const response = await this.executeWithRetry(() =>
+        this.octokit.rest.issues.createMilestone({
+          owner,
+          repo,
+          ...milestoneData,
+        })
+      );
+      
+      return response.data;
+    } catch (error) {
+      throw translateGitHubError(error as GitHubClientError);
+    }
+  }
+
+  /**
    * Executes a function with retry logic and rate limiting
    */
   private async executeWithRetry<T>(
