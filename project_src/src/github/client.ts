@@ -12,6 +12,7 @@ import {
   CreatePullRequestRequest,
   GitHubClientError,
 } from './types';
+import { loadGitHubConfig, GitHubClientConfig } from './config';
 import {
   translateGitHubError,
   isRetryableError,
@@ -42,7 +43,24 @@ export class GitHubClient {
   }
 
   /**
+   * Creates a GitHub client from configuration files and environment variables
+   */
+  static fromConfig(configPath?: string): GitHubClient {
+    const config = loadGitHubConfig({ yamlPath: configPath });
+    
+    return new GitHubClient({
+      token: config.token,
+      userAgent: config.userAgent,
+      baseUrl: config.apiUrl,
+      rateLimitRetries: config.rateLimitRetries,
+      maxRetries: config.maxRetries,
+      retryDelay: config.retryDelay,
+    });
+  }
+
+  /**
    * Creates a GitHub client from environment variables
+   * @deprecated Use fromConfig() instead for better configuration management
    */
   static fromEnvironment(): GitHubClient {
     const token = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;

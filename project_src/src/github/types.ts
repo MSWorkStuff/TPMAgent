@@ -3,7 +3,7 @@ import { RequestError } from '@octokit/request-error';
 export interface GitHubConfig {
   token: string;
   userAgent?: string;
-  baseUrl?: string;
+  baseUrl?: string; // Keep baseUrl for compatibility with Octokit
   rateLimitRetries?: number;
   maxRetries?: number;
   retryDelay?: number;

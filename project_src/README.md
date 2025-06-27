@@ -97,16 +97,23 @@ See [`example.tpm-agent.config.yaml`](./example.tpm-agent.config.yaml) for the f
 
 #### GitHub Configuration
 
-The GitHub client can be configured via YAML:
+The GitHub client is configured using a separate YAML file and environment variables:
 
+**Configuration File** (`github-client.config.yaml`):
 ```yaml
-github:
-  token: "your-github-token"     # GitHub API token
-  userAgent: "MyApp/1.0.0"       # Custom user agent
-  apiUrl: "https://api.github.com" # GitHub API URL
-  maxRetries: 3                  # Maximum retry attempts
-  retryDelay: 1000               # Base delay between retries (ms)
+userAgent: "MyApp/1.0.0"       # Custom user agent
+apiUrl: "https://api.github.com" # GitHub API URL  
+maxRetries: 3                  # Maximum retry attempts
+retryDelay: 1000               # Base delay between retries (ms)
+rateLimitRetries: 3            # Maximum rate limit retry attempts
 ```
+
+**Environment Variables** (`.env` file):
+```bash
+GITHUB_TOKEN=your-github-token     # or GITHUB_PAT
+```
+
+Copy `example.github-client.config.yaml` to `github-client.config.yaml` and edit as needed.
 
 #### Project Configuration
 

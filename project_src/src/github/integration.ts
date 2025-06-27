@@ -1,5 +1,4 @@
 import { GitHubClient } from './client';
-import { loadConfig } from '../config';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('github-integration');
@@ -9,32 +8,18 @@ const logger = createLogger('github-integration');
  */
 export async function initializeGitHubClient(): Promise<GitHubClient | null> {
   try {
-    const config = loadConfig();
+    // Create client from configuration files and environment variables
+    const client = GitHubClient.fromConfig();
     
-    // Try to create client from configuration first
-    if (config.github?.token) {
-      const client = new GitHubClient({
-        token: config.github.token,
-        userAgent: config.github.userAgent,
-        baseUrl: config.github.apiUrl,
-        maxRetries: config.github.maxRetries,
-        retryDelay: config.github.retryDelay,
-      });
-      
-      // Test the connection
-      await client.testConnection();
-      logger.info('GitHub client initialized successfully from configuration');
-      return client;
-    }
-    
-    // Fall back to environment variables
-    const client = GitHubClient.fromEnvironment();
+    // Test the connection
     await client.testConnection();
-    logger.info('GitHub client initialized successfully from environment');
+    logger.info('GitHub client initialized successfully');
     return client;
     
   } catch (error) {
-    logger.warn('Failed to initialize GitHub client', { error: error instanceof Error ? error.message : String(error) });
+    logger.warn('Failed to initialize GitHub client', { 
+      error: error instanceof Error ? error.message : String(error) 
+    });
     return null;
   }
 }

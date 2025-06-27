@@ -1,15 +1,4 @@
-import {
-  translateGitHubError,
-  isRetryableError,
-  GitHubApiError,
-  GitHubAuthenticationError,
-  GitHubRateLimitError,
-  GitHubNotFoundError,
-  GitHubPermissionError,
-  GitHubNetworkError,
-} from '../errors';
-
-// Create a proper mock for RequestError
+// Create a proper mock for RequestError before any imports
 class MockRequestError extends Error {
   public status: number;
   public response?: any;
@@ -24,10 +13,26 @@ class MockRequestError extends Error {
   }
 }
 
+jest.mock('@octokit/request-error', () => ({
+  RequestError: MockRequestError,
+}));
+
+import {
+  translateGitHubError,
+  isRetryableError,
+  GitHubApiError,
+  GitHubAuthenticationError,
+  GitHubRateLimitError,
+  GitHubNotFoundError,
+  GitHubPermissionError,
+  GitHubNetworkError,
+} from '../errors';
+import { RequestError } from '@octokit/request-error';
+
 describe('GitHub Error Handling', () => {
   describe('translateGitHubError', () => {
     it('should translate 401 errors to authentication errors', () => {
-      const requestError = new MockRequestError('Unauthorized', 401, {
+      const requestError = new RequestError('Unauthorized', 401, {
         response: {
           status: 401,
           url: 'https://api.github.com/user',
@@ -48,7 +53,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should translate 403 rate limit errors to rate limit errors', () => {
-      const requestError = new MockRequestError('Rate limit exceeded', 403, {
+      const requestError = new RequestError('Rate limit exceeded', 403, {
         response: {
           status: 403,
           url: 'https://api.github.com/user',
@@ -73,7 +78,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should translate 403 permission errors to permission errors', () => {
-      const requestError = new MockRequestError('Forbidden', 403, {
+      const requestError = new RequestError('Forbidden', 403, {
         response: {
           status: 403,
           url: 'https://api.github.com/repos/private/repo',
@@ -94,7 +99,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should translate 404 errors to not found errors', () => {
-      const requestError = new MockRequestError('Not Found', 404, {
+      const requestError = new RequestError('Not Found', 404, {
         response: {
           status: 404,
           url: 'https://api.github.com/repos/nonexistent/repo',
@@ -115,7 +120,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should translate 422 validation errors', () => {
-      const requestError = new MockRequestError('Validation Failed', 422, {
+      const requestError = new RequestError('Validation Failed', 422, {
         response: {
           status: 422,
           url: 'https://api.github.com/repos/owner/repo/issues',
@@ -169,7 +174,7 @@ describe('GitHub Error Handling', () => {
 
   describe('isRetryableError', () => {
     it('should identify server errors as retryable', () => {
-      const serverError = new MockRequestError('Internal Server Error', 500, {
+      const serverError = new RequestError('Internal Server Error', 500, {
         response: {
           status: 500,
           url: 'https://api.github.com/user',
@@ -187,7 +192,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should identify rate limit errors as retryable', () => {
-      const rateLimitError = new MockRequestError('Rate limit exceeded', 403, {
+      const rateLimitError = new RequestError('Rate limit exceeded', 403, {
         response: {
           status: 403,
           url: 'https://api.github.com/user',
@@ -205,7 +210,7 @@ describe('GitHub Error Handling', () => {
     });
 
     it('should identify authentication errors as non-retryable', () => {
-      const authError = new MockRequestError('Unauthorized', 401, {
+      const authError = new RequestError('Unauthorized', 401, {
         response: {
           status: 401,
           url: 'https://api.github.com/user',

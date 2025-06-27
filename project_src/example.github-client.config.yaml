@@ -1,0 +1,21 @@
+# Example GitHub Client Configuration
+# Copy this file as github-client.config.yaml and edit as needed.
+# The GitHub token should be provided via environment variables (GITHUB_TOKEN or GITHUB_PAT)
+
+# User agent string for GitHub API requests
+# Format: YourAppName/Version
+userAgent: "TPMAgent/1.0.0"
+
+# GitHub API base URL
+# Use https://api.github.com for GitHub.com
+# Use https://your-domain/api/v3 for GitHub Enterprise
+apiUrl: "https://api.github.com"
+
+# Maximum number of retry attempts for failed requests
+maxRetries: 3
+
+# Base delay between retries in milliseconds
+retryDelay: 1000
+
+# Maximum number of retry attempts specifically for rate limit errors
+rateLimitRetries: 3

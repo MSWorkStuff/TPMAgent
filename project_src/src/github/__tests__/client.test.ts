@@ -1,6 +1,3 @@
-import { GitHubClient } from '../client';
-import { GitHubAuthenticationError, GitHubRateLimitError, GitHubNotFoundError } from '../errors';
-
 // Mock Octokit with proper ES module mocking
 const mockOctokit = {
   rest: {
@@ -29,24 +26,25 @@ jest.mock('@octokit/rest', () => ({
   Octokit: jest.fn(() => mockOctokit),
 }));
 
-// Create a proper mock for RequestError
-class MockRequestError extends Error {
-  public status: number;
-  public response?: any;
-  public request?: any;
-
-  constructor(message: string, status: number, options: { response?: any; request?: any }) {
-    super(message);
-    this.name = 'RequestError';
-    this.status = status;
-    this.response = options.response;
-    this.request = options.request;
-  }
-}
-
 jest.mock('@octokit/request-error', () => ({
-  RequestError: MockRequestError,
+  RequestError: class MockRequestError extends Error {
+    public status: number;
+    public response?: any;
+    public request?: any;
+
+    constructor(message: string, status: number, options: { response?: any; request?: any }) {
+      super(message);
+      this.name = 'RequestError';
+      this.status = status;
+      this.response = options.response;
+      this.request = options.request;
+    }
+  },
 }));
+
+import { GitHubClient } from '../client';
+import { GitHubAuthenticationError, GitHubRateLimitError, GitHubNotFoundError } from '../errors';
+import { RequestError } from '@octokit/request-error';
 
 describe('GitHubClient', () => {
   let client: GitHubClient;
@@ -122,7 +120,7 @@ describe('GitHubClient', () => {
     });
 
     it('should handle authentication errors', async () => {
-      const error = new MockRequestError('Bad credentials', 401, {
+      const error = new RequestError('Bad credentials', 401, {
         response: {
           status: 401,
           url: 'https://api.github.com/user',
@@ -208,7 +206,7 @@ describe('GitHubClient', () => {
     });
 
     it('should handle repository not found errors', async () => {
-      const error = new MockRequestError('Not Found', 404, {
+      const error = new RequestError('Not Found', 404, {
         response: {
           status: 404,
           url: 'https://api.github.com/repos/testuser/nonexistent',
@@ -359,7 +357,7 @@ describe('GitHubClient', () => {
 
   describe('retry logic', () => {
     it('should retry on rate limit errors', async () => {
-      const rateLimitError = new MockRequestError('rate limit exceeded', 403, {
+      const rateLimitError = new RequestError('rate limit exceeded', 403, {
         response: {
           status: 403,
           url: 'https://api.github.com/user',
@@ -395,7 +393,7 @@ describe('GitHubClient', () => {
     });
 
     it('should not retry on authentication errors', async () => {
-      const authError = new MockRequestError('Bad credentials', 401, {
+      const authError = new RequestError('Bad credentials', 401, {
         response: {
           status: 401,
           url: 'https://api.github.com/user',
@@ -416,7 +414,7 @@ describe('GitHubClient', () => {
     });
 
     it('should respect max retries', async () => {
-      const serverError = new MockRequestError('Internal Server Error', 500, {
+      const serverError = new RequestError('Internal Server Error', 500, {
         response: {
           status: 500,
           url: 'https://api.github.com/user',
