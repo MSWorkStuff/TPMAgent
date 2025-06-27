@@ -1,339 +1,108 @@
-# MCP Tool Registration Framework
+# MCP Tools
 
-This document describes the MCP (Model Context Protocol) tool registration framework implemented in this project. The framework provides a type-safe, extensible way to create, register, and execute tools in the MCP environment.
+This MCP server provides 4 tools for Technical Project Management and GitHub integration.
 
-## Architecture Overview
+## Available Tools
 
-The framework consists of several key components:
+### 1. analyze_project
 
-### Core Components
+**Description**: Analyzes a project description and generates a comprehensive project plan
 
-1. **Tool Interface** (`src/types/index.ts`) - Defines the contract for all tools
-2. **ToolRegistry** (`src/tools/registry.ts`) - Manages tool registration and execution
-3. **MCP Handlers** (`src/tools/handlers.ts`) - Implements MCP protocol handlers
-4. **Base Tool Classes** (`src/tools/base-tool.ts`) - Provides base implementations
-5. **Concrete Tools** (`src/tools/project-tools-new.ts`) - Actual tool implementations
+**Parameters**:
+- `projectDescription` (required): Description of the project to analyze
+- `requirements` (required): Array of project requirements  
+- `techStack` (optional): Array of preferred technology stack items
 
-## Tool Interface
+**Returns**: ProjectPlan with milestones, risks, dependencies, and tech stack
 
-All tools must implement the `Tool<TInput, TOutput>` interface:
-
+**Usage**:
 ```typescript
-interface Tool<TInput = any, TOutput = any> {
-  getName(): string;
-  getDescription(): string;
-  getInputSchema?(): ToolSchema;
-  execute(params: TInput): Promise<TOutput>;
-}
-```
-
-### Tool Types
-
-- **TInput**: Type of input parameters
-- **TOutput**: Type of output result
-- **ToolSchema**: JSON Schema for input validation
-
-## Creating Tools
-
-### Option 1: Using BaseTool
-
-```typescript
-import { BaseTool } from './base-tool.js';
-
-class MyTool extends BaseTool<MyInput, MyOutput> {
-  constructor() {
-    super(
-      'my_tool',
-      'Description of my tool',
-      {
-        type: 'object',
-        properties: {
-          param1: { type: 'string', description: 'First parameter' },
-          param2: { type: 'number', description: 'Second parameter' }
-        },
-        required: ['param1']
-      }
-    );
-  }
-
-  async execute(params: MyInput): Promise<MyOutput> {
-    // Implementation here
-    return result;
-  }
-}
-```
-
-### Option 2: Using ZodTool (Recommended)
-
-```typescript
-import { ZodTool } from './base-tool.js';
-import { z } from 'zod';
-
-const MyToolSchema = z.object({
-  param1: z.string().describe('First parameter'),
-  param2: z.number().optional().describe('Second parameter')
+const result = await toolRegistry.execute('analyze_project', {
+  projectDescription: 'E-commerce web application',
+  requirements: ['User authentication', 'Payment processing', 'Product catalog'],
+  techStack: ['React', 'Node.js', 'PostgreSQL']
 });
-
-class MyZodTool extends ZodTool<typeof MyToolSchema> {
-  constructor() {
-    super(
-      'my_zod_tool',
-      'Description of my Zod tool',
-      MyToolSchema
-    );
-  }
-
-  protected async executeWithValidatedParams(
-    params: z.infer<typeof MyToolSchema>
-  ): Promise<MyOutput> {
-    // Params are automatically validated
-    return result;
-  }
-}
 ```
 
-## Tool Registry
+### 2. generate_implementation_strategy
 
-The `ToolRegistry` class manages tool registration and execution:
+**Description**: Generates an implementation strategy based on a project plan
 
-### Registration
+**Parameters**:
+- `projectPlan` (required): Object with name, description, and optional techStack
+- `timeline` (optional): Target timeline for the project
+- `teamSize` (optional): Available team size number
 
+**Returns**: ImplementationStrategy with phases, tasks, and resource requirements
+
+**Usage**:
 ```typescript
-import { toolRegistry } from './tools/index.js';
-
-const myTool = new MyTool();
-toolRegistry.register(myTool);
+const result = await toolRegistry.execute('generate_implementation_strategy', {
+  projectPlan: {
+    name: 'E-commerce App',
+    description: 'Online store with payment integration',
+    techStack: { frontend: ['React'], backend: ['Node.js'] }
+  },
+  timeline: '12 weeks',
+  teamSize: 3
+});
 ```
 
-### Execution
+### 3. get_project_status
 
+**Description**: Gets the current status and progress of a project  
+
+**Parameters**:
+- `projectId` (required): The ID of the project to get status for
+- `includeDetails` (optional): Boolean to include detailed task information
+
+**Returns**: Project status and progress information
+
+**Usage**:
 ```typescript
-const result = await toolRegistry.execute('my_tool', { param1: 'value' });
+const result = await toolRegistry.execute('get_project_status', {
+  projectId: 'ecommerce-app-2024',
+  includeDetails: true
+});
 ```
 
-### Registry Methods
+### 4. create_github_issue
 
-- `register(tool)` - Register a tool
-- `unregister(toolName)` - Unregister a tool
-- `hasTool(toolName)` - Check if tool exists
-- `getTool(toolName)` - Get tool instance
-- `getToolDefinitions()` - Get all tool definitions for MCP
-- `execute(toolName, params)` - Execute a tool
-- `getExecutionStats()` - Get execution statistics
+**Description**: Creates a GitHub issue with specified parameters. Automatically creates missing labels, assigns to milestone if provided, and adds to project if configured. Uses GitHub repository validation functions.
 
-## MCP Protocol Integration
+**Parameters**:
+- `owner` (required): GitHub repository owner (username or organization)
+- `repo` (required): GitHub repository name
+- `title` (required): Issue title (minimum 1 character)
+- `body` (required): Issue body/description
+- `labels` (optional): Array of label names to assign to the issue
+- `milestone` (optional): Milestone title to assign the issue to
+- `assignees` (optional): Array of GitHub usernames to assign to the issue
+- `projectId` (optional): Project ID to add the issue to (if configured)
 
-The framework automatically handles MCP protocol requests:
+**Returns**: Detailed result with created issue information, validation results, created labels, and any warnings
 
-### List Tools
-
-```json
-{
-  "method": "tools/list",
-  "params": {}
-}
-```
-
-Response includes all registered tools with their schemas.
-
-### Call Tool
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "tool_name",
-    "arguments": { "param1": "value" }
-  }
-}
-```
-
-## Error Handling
-
-The framework provides comprehensive error handling:
-
-### Error Types
-
-- **ToolNotFoundError** - Tool doesn't exist
-- **ToolExecutionError** - Tool execution failed
-- **McpError** - MCP protocol errors (converted automatically)
-
-### Error Propagation
-
-- Validation errors are caught and converted to MCP errors
-- Tool execution errors are wrapped in `ToolExecutionError`
-- All errors are logged with context information
-
-## Type Safety
-
-The framework provides full TypeScript type safety:
-
+**Usage**:
 ```typescript
-// Input and output types are preserved
-class TypedTool extends BaseTool<
-  { name: string; age: number },  // Input type
-  { greeting: string }            // Output type
-> {
-  // TypeScript will enforce these types
-}
+const result = await toolRegistry.execute('create_github_issue', {
+  owner: 'myorg',
+  repo: 'myproject',
+  title: '🐛 Fix login validation bug',
+  body: 'The login form doesn\'t validate email addresses properly.',
+  labels: ['bug', 'frontend', 'high-priority'],
+  milestone: 'Sprint 3 - Bug Fixes',
+  assignees: ['developer1', 'developer2']
+});
 ```
 
-## Monitoring and Debugging
+## Framework
 
-### Execution History
-
-```typescript
-const history = toolRegistry.getExecutionHistory();
-// Returns array of execution records with timing and success/failure
-```
-
-### Statistics
-
-```typescript
-const stats = toolRegistry.getExecutionStats();
-// Returns comprehensive execution statistics
-```
-
-### Logging
-
-All tool operations are automatically logged with structured data:
-
-- Tool registration/unregistration
-- Tool execution start/completion
-- Errors and failures
-- Performance metrics
-
-## Built-in Tools
-
-The framework includes several built-in tools:
-
-### ProjectAnalysisTool
-
-Analyzes project requirements and generates comprehensive project plans.
-
-**Input:**
-- `projectDescription` (string) - Project description
-- `requirements` (string[]) - List of requirements
-- `techStack` (string[], optional) - Preferred technologies
-
-**Output:** Complete `ProjectPlan` object
-
-### ImplementationStrategyTool
-
-Generates implementation strategies based on project plans.
-
-**Input:**
-- `projectPlan` (object) - Project plan
-- `timeline` (string, optional) - Target timeline
-- `teamSize` (number, optional) - Team size
-
-**Output:** Complete `ImplementationStrategy` object
-
-### ProjectStatusTool
-
-Gets current project status and progress.
-
-**Input:**
-- `projectId` (string) - Project identifier
-- `includeDetails` (boolean, optional) - Include detailed information
-
-**Output:** Project status with optional details
-
-## Testing
-
-The framework includes comprehensive tests:
-
-### Running Tests
-
-```bash
-npm test
-```
-
-### Test Coverage
-
-- Unit tests for ToolRegistry
-- Integration tests for MCP handlers
-- Tool implementation tests
-- Error handling tests
-- Type safety tests
-
-## Best Practices
-
-### Tool Development
-
-1. **Use ZodTool** for automatic validation
-2. **Provide clear descriptions** in schemas
-3. **Handle errors gracefully** with meaningful messages
-4. **Use TypeScript generics** for type safety
-5. **Write comprehensive tests** for each tool
-
-### Schema Design
-
-1. **Required vs Optional** - Mark optional parameters correctly
-2. **Descriptions** - Provide helpful descriptions for all parameters
-3. **Validation** - Use appropriate validation constraints
-4. **Defaults** - Consider default values where appropriate
-
-### Error Handling
-
-1. **Specific Error Types** - Throw specific errors for different scenarios
-2. **Error Messages** - Provide clear, actionable error messages
-3. **Logging Context** - Include relevant context in logs
-4. **Recovery** - Consider how tools can recover from failures
-
-## Extension Points
-
-The framework is designed to be extensible:
-
-### Custom Base Classes
-
-You can create custom base classes for specific tool types:
-
-```typescript
-abstract class DatabaseTool<TInput, TOutput> extends BaseTool<TInput, TOutput> {
-  // Common database functionality
-}
-```
-
-### Custom Validation
-
-Beyond Zod, you can implement custom validation:
-
-```typescript
-class CustomValidationTool extends BaseTool<TInput, TOutput> {
-  async execute(params: TInput): Promise<TOutput> {
-    this.customValidate(params);
-    // ...
-  }
-
-  private customValidate(params: TInput): void {
-    // Custom validation logic
-  }
-}
-```
-
-### Middleware
-
-Tool execution can be enhanced with middleware patterns:
-
-```typescript
-// Registry could be extended to support middleware
-toolRegistry.use(loggingMiddleware);
-toolRegistry.use(authenticationMiddleware);
-```
+All tools use:
+- **ZodTool base class** for automatic parameter validation
+- **TypeScript types** for input/output safety
+- **Comprehensive error handling** with specific error types
+- **MCP protocol integration** for seamless client communication
 
 ## Configuration
 
-Tools can be configured through the main configuration system:
-
-```yaml
-# sse-server.config.yaml
-tools:
-  enabled: true
-  maxExecutionTime: 30000
-  logging:
-    level: info
-    includeParams: true
-```
-
-This framework provides a solid foundation for building robust, type-safe MCP tools with comprehensive error handling, monitoring, and extensibility.
+Tools are automatically registered in `src/tools/index.ts` and use the existing GitHub client configuration for API access.
