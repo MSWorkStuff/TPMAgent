@@ -285,30 +285,33 @@ export async function validatePermissions(
     
     // Get user's permissions on the repository
     const currentUser = await client.getCurrentUser();
-    let permissions;
+    let permissionLevel: string;
     
     try {
       // Try to get repository permissions for the current user
-      permissions = await client.getRepositoryPermissions(owner, repo, currentUser.login);
+      permissionLevel = await client.getRepositoryPermissions(owner, repo, currentUser.login);
     } catch (error) {
-      // If we can't get explicit permissions, infer from repository access
+      // If we can't get explicit permissions, we can't reliably validate permissions
       const githubError = translateGitHubError(error as GitHubClientError);
       
-      // If we can access the repo but can't get permissions, assume read-only
-      permissions = {
-        admin: false,
-        maintain: false,
-        push: false,
-        triage: false,
-        pull: true,
+      return {
+        isValid: false,
+        error: `Unable to determine permissions for '${owner}/${repo}'. The permissions endpoint may not be accessible or your token may lack the required scopes. Please verify your token has 'repo' scope and appropriate permissions manually.`,
+        details: { 
+          errorType: 'permission_check_failed',
+          originalError: githubError.message,
+          suggestion: 'Verify your token has repo scope and try again, or check permissions manually in GitHub',
+        },
       };
     }
     
-    const canCreateIssues = permissions.push || permissions.admin || permissions.maintain;
-    const canCreateLabels = permissions.push || permissions.admin || permissions.maintain;
-    const canModifyProjects = permissions.admin || permissions.maintain;
-    const canPush = permissions.push || permissions.admin || permissions.maintain;
-    const canAdmin = permissions.admin;
+    // Parse GitHub permission levels into boolean capabilities
+    // GitHub permission levels: 'admin', 'write', 'read', 'triage', 'maintain'
+    const canCreateIssues = ['admin', 'write', 'maintain'].includes(permissionLevel);
+    const canCreateLabels = ['admin', 'write', 'maintain'].includes(permissionLevel);
+    const canModifyProjects = ['admin', 'maintain'].includes(permissionLevel);
+    const canPush = ['admin', 'write', 'maintain'].includes(permissionLevel);
+    const canAdmin = permissionLevel === 'admin';
     
     const allPermissionsValid = canCreateIssues && canCreateLabels && canModifyProjects;
     
@@ -331,7 +334,7 @@ export async function validatePermissions(
         details: {
           missingPermissions,
           requiredScopes: ['repo'],
-          currentPermissions: permissions,
+          currentPermissions: { level: permissionLevel },
         },
       };
     }
@@ -347,7 +350,7 @@ export async function validatePermissions(
       },
       details: {
         message: 'All required permissions are available',
-        currentPermissions: permissions,
+        currentPermissions: { level: permissionLevel },
       },
     };
   } catch (error) {

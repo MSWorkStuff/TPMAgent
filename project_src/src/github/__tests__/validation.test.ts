@@ -137,17 +137,11 @@ describe('GitHub Validation Functions', () => {
         openIssuesCount: 0,
       };
       const mockUser = { login: 'testuser', id: 1, avatarUrl: '', htmlUrl: '', type: 'User' as const };
-      const mockPermissions = {
-        admin: true,
-        maintain: false,
-        push: true,
-        triage: false,
-        pull: true,
-      };
+      const mockPermissionLevel = 'admin'; // GitHub API returns permission as string
 
       mockGetRepository.mockResolvedValue(mockRepo);
       mockGetCurrentUser.mockResolvedValue(mockUser);
-      mockGetRepositoryPermissions.mockResolvedValue(mockPermissions);
+      mockGetRepositoryPermissions.mockResolvedValue(mockPermissionLevel);
 
       const mockClient = new GitHubClient({ token: 'test-token' });
       const result = await validatePermissions(mockClient, 'owner', 'test-repo');
@@ -157,6 +151,36 @@ describe('GitHub Validation Functions', () => {
       expect(result.permissions?.canCreateLabels).toBe(true);
       expect(result.permissions?.canModifyProjects).toBe(true);
       expect(result.permissions?.canAdmin).toBe(true);
+    });
+
+    it('should handle permission check failures', async () => {
+      const mockRepo = {
+        name: 'test-repo',
+        fullName: 'owner/test-repo',
+        private: false,
+        description: 'Test repository',
+        id: 1,
+        htmlUrl: '',
+        cloneUrl: '',
+        createdAt: '',
+        updatedAt: '',
+        language: 'TypeScript',
+        stargazersCount: 0,
+        forksCount: 0,
+        openIssuesCount: 0,
+      };
+      const mockUser = { login: 'testuser', id: 1, avatarUrl: '', htmlUrl: '', type: 'User' as const };
+
+      mockGetRepository.mockResolvedValue(mockRepo);
+      mockGetCurrentUser.mockResolvedValue(mockUser);
+      mockGetRepositoryPermissions.mockRejectedValue(new Error('Permissions endpoint not accessible'));
+
+      const mockClient = new GitHubClient({ token: 'test-token' });
+      const result = await validatePermissions(mockClient, 'owner', 'test-repo');
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain('Unable to determine permissions');
+      expect(result.details?.errorType).toBe('permission_check_failed');
     });
   });
 });
