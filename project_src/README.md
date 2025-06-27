@@ -126,19 +126,6 @@ This server implements the Model Context Protocol and can be used with any MCP-c
 - Technical documentation generation
 - GitHub repository management and operations
 
-### GitHub Client Features
-
-The integrated GitHub client provides:
-
-- **Authentication**: Support for GitHub tokens via environment variables
-- **Rate Limiting**: Automatic detection and handling of GitHub API rate limits
-- **Retry Logic**: Exponential backoff for network failures and server errors
-- **Error Handling**: User-friendly error messages for common GitHub API issues
-- **Connection Testing**: Validates credentials on startup
-- **Repository Operations**: List, get, and manage GitHub repositories
-- **Issue Management**: Create, list, and manage GitHub issues
-- **Pull Request Operations**: Create, list, and manage pull requests
-
 ## Project Structure
 
 ```
@@ -146,19 +133,7 @@ src/
 ├── server.ts          # Main MCP server entry point
 ├── config/            # Configuration management
 ├── github/            # GitHub API client and integration
-│   ├── client.ts      # Main GitHub client with Octokit wrapper
-│   ├── types.ts       # TypeScript types for GitHub operations
-│   ├── errors.ts      # Error handling and translation
-│   └── integration.ts # Integration helpers and examples
 ├── tools/             # Tool implementations
 ├── types/             # TypeScript type definitions
 └── utils/             # Utility functions and logger
 ```
-
-## Contributing
-
-This project is in early development. Contributions and feedback are welcome!
-
-## License
-
-MIT
