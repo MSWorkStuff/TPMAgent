@@ -3,7 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 
 export default function Chat() {
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chatMessages');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [currentMessage, setCurrentMessage] = useState("");
   const chatLogRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +31,10 @@ export default function Chat() {
     if (chatLogRef.current) {
       chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
     }
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
 
   return (
