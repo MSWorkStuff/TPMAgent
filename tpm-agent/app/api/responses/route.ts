@@ -1,8 +1,8 @@
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from "next/server";
 import { AzureOpenAI } from "openai";
-import { EasyInputMessage } from "openai/resources/responses/responses.mjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { getToken } from "next-auth/jwt";
 import { logger } from "@/app/lib/logger";
 import { readFile } from "fs/promises";
 import { join } from "path";
@@ -29,16 +29,16 @@ const aoaiClient = endpoint && apiKey ? new AzureOpenAI({
   apiVersion,
 }) : null;
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
+
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === 'object' && x !== null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const token = await getToken({ req: request });
     
-    if (!session?.accessToken) {
+    if (!token?.accessToken) {
       return NextResponse.json(
         { error: 'GitHub authentication required' },
         { status: 401 }
@@ -66,36 +66,32 @@ export async function POST(request: NextRequest) {
     let instructions = '';
     try {
       instructions = await readFile(instructionsPath, 'utf-8');
-    } catch (error) {
+    } catch {
       logger.warn('Instructions file not found, proceeding without instructions');
     }
 
-    const responseCreateParams: any = {
+    // Build streaming request using the SDK's streaming helper to preserve types
+    const stream = await aoaiClient.responses.stream({
       model: deployment,
       input: [{ role: 'user', content: message }],
-      stream: true,
-      instructions
-    };
-
-    // Add previous response ID for conversation continuity
-    if (previousResponseId) {
-      responseCreateParams.previous_response_id = previousResponseId;
-    }
-
-    // Always add remote MCP server configuration for GitHub integration
-    if (session?.accessToken) {
-      responseCreateParams.tools = [{
-        type: "mcp",
-        server_label: "github_remote_mcp",
-        server_url: "https://api.githubcopilot.com/mcp/",
-        require_approval: "never",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`
-        }
-      }];
-    }
-
-    const stream = await aoaiClient.responses.create(responseCreateParams);
+      instructions,
+      ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
+      ...(token?.accessToken
+        ? {
+            tools: [
+              {
+                type: "mcp",
+                server_label: "github_remote_mcp",
+                server_url: "https://api.githubcopilot.com/mcp/",
+                require_approval: "never",
+                headers: {
+                  Authorization: `Bearer ${token.accessToken}`,
+                },
+              },
+            ],
+          }
+        : {}),
+    });
 
     // Create a ReadableStream for streaming the response
     const encoder = new TextEncoder();
@@ -104,30 +100,40 @@ export async function POST(request: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          const asyncIterable = stream as any;
-          for await (const chunk of asyncIterable) {
+          for await (const chunk of stream) {
+            if (!isRecord(chunk) || typeof chunk.type !== 'string') {
+              continue;
+            }
+
             // Send response ID when we first get it
-            if (chunk.response?.id && !responseId) {
+            if (isRecord(chunk.response) && typeof chunk.response.id === 'string' && !responseId) {
               responseId = chunk.response.id;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                type: 'response_id', 
-                id: responseId 
-              })}\n\n`));
+              controller.enqueue(encoder.encode(
+                `data: ${JSON.stringify({ type: 'response_id', id: responseId })}\n\n`
+              ));
+              continue;
             }
             
             // Handle text deltas
-            if (chunk.type === 'response.output_text.delta' && chunk.delta) {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                type: 'content',
-                content: chunk.delta
-              })}\n\n`));
+            if (chunk.type === 'response.output_text.delta' && typeof chunk.delta === 'string') {
+              controller.enqueue(encoder.encode(
+                `data: ${JSON.stringify({ type: 'content', content: chunk.delta })}\n\n`
+              ));
+              continue;
             }
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch (error) {
+          // Surface a structured SSE error before closing
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: 'error', message: error instanceof Error ? error.message : 'Unknown stream error' })}\n\n`
+            )
+          );
           logger.error('Stream error:', error);
-          controller.error(error);
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
         }
       }
     });
@@ -172,9 +178,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     logger.debug('PUT request received for repository context update');
-    const session = await getServerSession(authOptions);
+    const token = await getToken({ req: request });
     
-    if (!session?.accessToken) {
+    if (!token?.accessToken) {
       return NextResponse.json(
         { error: 'GitHub authentication required' },
         { status: 401 }
@@ -226,7 +232,7 @@ Repository Details:
 This repository is now the active context for all subsequent project management tasks, issue creation, and development planning.`
     };
 
-    const responseCreateParams: any = {
+    const responseCreateParams: Record<string, unknown> = {
       model: deployment,
       input: [assistantMessage],
       stream: false,

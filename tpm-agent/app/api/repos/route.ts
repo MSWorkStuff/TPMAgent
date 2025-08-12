@@ -1,18 +1,24 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "../auth/[...nextauth]/route"
+import { getToken } from "next-auth/jwt"
+import { authOptions } from "../auth/[...nextauth]/auth-options"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
+  const token = await getToken({ req: request })
   
-  if (!session?.accessToken) {
+  if (!token?.accessToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  if (!session || !session.user) {
+    return NextResponse.json({ error: "Session missing" }, { status: 401 })
   }
 
   try {
     const response = await fetch("https://api.github.com/user/repos?affiliation=owner,collaborator&sort=updated&per_page=100", {
       headers: {
-        "Authorization": `Bearer ${session.accessToken}`,
+        "Authorization": `Bearer ${token.accessToken}`,
         "Accept": "application/vnd.github.v3+json"
       }
     })

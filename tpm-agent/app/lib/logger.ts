@@ -19,7 +19,7 @@ class Logger {
     return !this.isProduction;
   }
 
-  private formatMessage(level: LogLevel, message: string, data?: any): void {
+  private formatMessage(level: LogLevel, message: string, data?: unknown): void {
     if (!this.shouldLog()) return;
 
     const timestamp = new Date().toISOString();
@@ -32,15 +32,15 @@ class Logger {
     }
   }
 
-  public debug(message: string, data?: any): void {
+  public debug(message: string, data?: unknown): void {
     this.formatMessage('debug', message, data);
   }
 
-  public info(message: string, data?: any): void {
+  public info(message: string, data?: unknown): void {
     this.formatMessage('info', message, data);
   }
 
-  public warn(message: string, data?: any): void {
+  public warn(message: string, data?: unknown): void {
     if (!this.shouldLog()) return;
     
     const timestamp = new Date().toISOString();
@@ -53,7 +53,7 @@ class Logger {
     }
   }
 
-  public error(message: string, error?: any): void {
+  public error(message: string, error?: unknown): void {
     if (!this.shouldLog()) return;
     
     const timestamp = new Date().toISOString();

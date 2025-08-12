@@ -55,7 +55,7 @@ export async function* streamResponses(
             }
             
             try {
-              const parsed = JSON.parse(data);
+              const parsed = JSON.parse(data) as { type?: string; id?: string; content?: string };
               if (parsed.type === 'response_id' && parsed.id) {
                 logger.debug('Received response ID:', parsed.id);
                 yield { type: 'response_id', id: parsed.id };
@@ -63,7 +63,7 @@ export async function* streamResponses(
                 logger.debug('Received content chunk:', parsed.content);
                 yield { type: 'content', content: parsed.content };
               }
-            } catch (e) {
+            } catch {
               // Ignore parsing errors for partial chunks
             }
           }
@@ -72,7 +72,7 @@ export async function* streamResponses(
     } finally {
       reader.releaseLock();
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Responses error:', error);
     throw error;
   }

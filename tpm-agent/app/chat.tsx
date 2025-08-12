@@ -20,11 +20,11 @@ export default function Chat() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('chatMessages');
       if (saved) {
-        const parsedMessages = JSON.parse(saved);
-        return parsedMessages.map((msg: any, index: number) => ({
+        const parsedMessages = JSON.parse(saved) as Array<Partial<Message>>;
+        return parsedMessages.map((msg, index: number) => ({
           ...msg,
           id: msg.id || `legacy-${index}-${Date.now()}`
-        }));
+        })) as Message[];
       }
     }
     return [];
@@ -67,7 +67,7 @@ export default function Chat() {
         setMessages(prev => [...prev, userMessage]);
         
         // Add empty assistant message
-        let assistantMessage: Message = { 
+        const assistantMessage: Message = { 
           id: `temp-${Date.now()}-${Math.random()}`,
           role: 'assistant', 
           content: '' 
@@ -182,7 +182,7 @@ export default function Chat() {
           setIsUpdatingRepository(false);
         });
     }
-  }, [selectedRepository, lastUpdatedRepositoryId, isUpdatingRepository, showToast]);
+  }, [selectedRepository, lastUpdatedRepositoryId, isUpdatingRepository, showToast, lastResponseId, markRepositoryContextUpdated]);
 
   const saveConversationAsMarkdown = () => {
     if (messages.length === 0) {
