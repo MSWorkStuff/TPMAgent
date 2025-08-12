@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Chat from "./chat";
 import Repo from "./repo";
 import RepoIssues from "./repo-issues";
@@ -9,6 +9,8 @@ import { useRepository } from "./context/repository";
 export default function Home() {
   const [currentView, setCurrentView] = useState<'repo' | 'chat' | 'repo-issues'>('repo');
   const { selectedRepository } = useRepository();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="h-screen flex flex-col">
@@ -47,7 +49,7 @@ export default function Home() {
               Chat
             </button>
           </div>
-          {selectedRepository && (
+          {mounted && selectedRepository && (
             <a
               href={selectedRepository.html_url}
               target="_blank"

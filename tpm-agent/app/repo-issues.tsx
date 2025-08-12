@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRepository } from "./context/repository"
+import Image from "next/image"
 
 interface Issue {
   id: number
@@ -29,17 +30,13 @@ export default function RepoIssues() {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(false)
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     if (!selectedRepository || !session) return
     
     setLoading(true)
     try {
-      const response = await fetch(`https://api.github.com/repos/${selectedRepository.full_name}/issues?state=all&per_page=50`, {
-        headers: {
-          'Authorization': `token ${session.accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      })
+      const [owner, repo] = selectedRepository.full_name.split("/");
+      const response = await fetch(`/api/issues?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`)
       
       if (!response.ok) {
         throw new Error(`Failed to fetch issues: ${response.status}`)
@@ -52,13 +49,13 @@ export default function RepoIssues() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedRepository, session])
 
   useEffect(() => {
     if (selectedRepository && session) {
       fetchIssues()
     }
-  }, [selectedRepository, session])
+  }, [selectedRepository, session, fetchIssues])
 
   if (!selectedRepository) {
     return (
@@ -142,9 +139,11 @@ export default function RepoIssues() {
                   
                   <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
                     <div className="flex items-center gap-1">
-                      <img 
+                    <Image 
                         src={issue.user.avatar_url} 
                         alt={issue.user.login}
+                        width={16}
+                        height={16}
                         className="w-4 h-4 rounded-full"
                       />
                       <span>{issue.user.login}</span>

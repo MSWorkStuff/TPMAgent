@@ -143,11 +143,6 @@ export default function Repo() {
       </div>
 
       <div className="flex-1 flex flex-col gap-6 min-h-0">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm shrink-0">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-            GitHub
-          </h2>
-        </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-4 shrink-0">
