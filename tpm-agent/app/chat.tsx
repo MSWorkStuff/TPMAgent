@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react";
-import { streamResponses, updateRepositoryContext } from "./lib/azure-openai";
+import { streamResponses, updateRepositoryContext } from "@/lib/azure-openai";
 import ReactMarkdown from 'react-markdown';
 import { useToast } from './utils/toast';
 import { useRepository } from './context/repository';
-import { logger } from './lib/logger';
+import { logger } from '@/lib/logger';
 
 interface Message {
   id: string;

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { useRepository } from "./context/repository"
 import { useToast } from './utils/toast'
-import { logger } from './lib/logger'
+import { logger } from '@/lib/logger'
 
 interface Repository {
   id: number

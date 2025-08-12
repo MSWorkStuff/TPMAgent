@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from "next/server";
 import { AzureOpenAI } from "openai";
 import { getToken } from "next-auth/jwt";
-import { logger } from "@/app/lib/logger";
+import { logger } from "@/lib/logger";
 import { readFile } from "fs/promises";
 import { join } from "path";
 
