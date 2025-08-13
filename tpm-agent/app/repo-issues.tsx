@@ -4,25 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRepository } from "./context/repository"
 import Image from "next/image"
+import { fetchIssues as fetchIssuesFromApi, type Issue } from "@/lib/issues-client"
 
-interface Issue {
-  id: number
-  number: number
-  title: string
-  body: string | null
-  state: string
-  html_url: string
-  created_at: string
-  updated_at: string
-  user: {
-    login: string
-    avatar_url: string
-  }
-  labels: Array<{
-    name: string
-    color: string
-  }>
-}
 
 export default function RepoIssues() {
   const { data: session } = useSession()
@@ -30,19 +13,13 @@ export default function RepoIssues() {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(false)
 
-  const fetchIssues = useCallback(async () => {
+const fetchIssues = useCallback(async () => {
     if (!selectedRepository || !session) return
     
     setLoading(true)
     try {
       const [owner, repo] = selectedRepository.full_name.split("/");
-      const response = await fetch(`/api/issues?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`)
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch issues: ${response.status}`)
-      }
-      
-      const issuesData = await response.json()
+      const issuesData = await fetchIssuesFromApi(owner, repo)
       setIssues(issuesData)
     } catch (error) {
       console.error('Failed to fetch issues:', error)
